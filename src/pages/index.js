@@ -7,13 +7,13 @@ export default function HomePage() {
 
   const createRoom = () => {
     const newRoomId = Math.random().toString(36).substring(2, 8);
-    router.push(/session/${newRoomId});
+    router.push(`/session/${newRoomId}`);
   };
 
   const joinRoom = (e) => {
     e.preventDefault();
     if (roomId) {
-      router.push(/session/${roomId});
+      router.push(`/session/${roomId}`);
     } else {
       alert('Please enter a room code.');
     }

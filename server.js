@@ -9,7 +9,7 @@ const io = new Server(server, { cors: { origin: "*" } });
 const ROOMS = {};
 
 io.on('connection', (socket) => {
-    console.log(✅ User connected: ${socket.id});
+    console.log(`✅ User connected: ${socket.id}`);
 
     socket.on('join_room', ({ roomId, userId }) => {
         if (!ROOMS[roomId]) {
@@ -18,7 +18,7 @@ io.on('connection', (socket) => {
                 controller_userId: userId,
                 scrollPosition: 0,
             };
-            console.log(🚪 Room ${roomId} created by ${userId});
+            console.log(`🚪 Room ${roomId} created by ${userId}`);
         }
         socket.join(roomId);
         ROOMS[roomId].users[userId] = socket.id;
@@ -29,7 +29,7 @@ io.on('connection', (socket) => {
             controllerId: ROOMS[roomId].controller_userId,
             scrollPosition: ROOMS[roomId].scrollPosition
         });
-        console.log(👋 User ${userId} joined room ${roomId});
+        console.log(`👋 User ${userId} joined room ${roomId}`);
     });
 
     socket.on('sync_scroll', ({ scrollPosition }) => {
@@ -76,12 +76,10 @@ io.on('connection', (socket) => {
         });
     });
 
-    // 👇 --- NEW: Live Reaction Logic --- 👇
     socket.on('send_reaction', ({ reaction }) => {
         const { roomId, userId } = socket;
         if (!roomId || !ROOMS[roomId]) return;
         
-        // Broadcast the reaction to everyone in the room
         io.to(roomId).emit('new_reaction', {
             reaction: reaction,
             senderId: userId
@@ -89,14 +87,30 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log(❌ User disconnected: ${socket.id});
+        console.log(`❌ User disconnected: ${socket.id}`);
         const { roomId, userId } = socket;
-        if (roomId && ROOMS[roomId] && ROOMS[roomId].users && userId) {
-            delete ROOMS[roomId].users[userId];
+        const room = ROOMS[roomId];
+
+        if (room && room.users && userId) {
+            delete room.users[userId];
+
+            if (room.controller_userId === userId) {
+                const remainingUsers = Object.keys(room.users);
+                if (remainingUsers.length > 0) {
+                    const newControllerId = remainingUsers[0];
+                    room.controller_userId = newControllerId;
+                    io.to(roomId).emit('controller_changed', { newControllerId });
+                    console.log(`👑 Controller disconnected. New controller is ${newControllerId}`);
+                } else {
+                    delete ROOMS[roomId];
+                    console.log(`💥 Room ${roomId} is empty and has been deleted.`);
+                }
+            }
         }
     });
 });
 
-server.listen(3001, () => {
-    console.log('🚀 Server is listening on port 3001');
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+    console.log(`🚀 Server is listening on port ${PORT}`);
 });

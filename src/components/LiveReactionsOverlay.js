@@ -1,4 +1,3 @@
-// components/LiveReactionsOverlay.js
 import { useState, useEffect } from 'react';
 
 export default function LiveReactionsOverlay({ socket }) {
@@ -11,7 +10,7 @@ export default function LiveReactionsOverlay({ socket }) {
       const newReaction = {
         id: Math.random(),
         emoji: data.reaction,
-        left: ${Math.random() * 90}%,
+        left: `${Math.random() * 90}%`,
       };
       setReactions((prev) => [...prev, newReaction]);
 
@@ -31,7 +30,6 @@ export default function LiveReactionsOverlay({ socket }) {
           position: fixed;
           bottom: 80px;
           font-size: 48px;
-          /* 👇 THE FIX IS HERE: Ensures emojis appear on top of other content 👇 */
           z-index: 101; 
           animation: float-up 3s ease-out forwards;
           pointer-events: none;
