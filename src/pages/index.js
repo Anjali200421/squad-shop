@@ -1,30 +1,41 @@
-// src/pages/index.js
-import { useEffect } from 'react';
-import { io } from 'socket.io-client';
+import { useState } from 'react';
+import { useRouter } from 'next/router';
 
 export default function HomePage() {
-  // On page load, generate a simple user ID if we don't have one.
-  useEffect(() => {
-    if (!localStorage.getItem('userId')) {
-      const randomId = `user_${Math.random().toString(36).substring(2, 9)}`;
-      localStorage.setItem('userId', randomId);
-    }
-  }, []);
+  const [roomId, setRoomId] = useState('');
+  const router = useRouter();
 
   const createRoom = () => {
-    const socket = io('http://localhost:3001');
-    socket.on('connect', () => {
-      socket.emit('create_room', { userId: localStorage.getItem('userId') });
-    });
-    socket.on('room_created', ({ roomId }) => {
-      window.location.href = `/session/${roomId}`;
-    });
+    const newRoomId = Math.random().toString(36).substring(2, 8);
+    router.push(/session/${newRoomId});
+  };
+
+  const joinRoom = (e) => {
+    e.preventDefault();
+    if (roomId) {
+      router.push(/session/${roomId});
+    } else {
+      alert('Please enter a room code.');
+    }
   };
 
   return (
-    <div>
-      <h1>Control Feature Test</h1>
-      <button onClick={createRoom}>Create New Room</button>
+    <div style={{ fontFamily: 'sans-serif', textAlign: 'center', padding: '50px' }}>
+      <h1>Collaborative Shopping</h1>
+      <button onClick={createRoom} style={{ padding: '10px 20px', fontSize: '1em' }}>
+        Create a New Session
+      </button>
+      <hr style={{ margin: '30px auto', width: '50%' }} />
+      <form onSubmit={joinRoom}>
+        <input
+          type="text"
+          value={roomId}
+          onChange={(e) => setRoomId(e.target.value)}
+          placeholder="Enter session code"
+          style={{ padding: '10px', marginRight: '10px' }}
+        />
+        <button type="submit">Join Session</button>
+      </form>
     </div>
   );
 }
